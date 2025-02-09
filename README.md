@@ -1,4 +1,4 @@
 # go-crud
-first crud application in go
 
+Simple CRUD service to explore basic Go libraries and DB operations. 
 
