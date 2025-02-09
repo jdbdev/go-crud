@@ -32,7 +32,7 @@ func main() {
 	}
 	defer db.Close()
 
-	// Create router:
+	// Create router and endpoints:
 	router := mux.NewRouter()
 	router.HandleFunc("/", indexPage)
 	router.HandleFunc("GET /users", getUsers)
@@ -42,7 +42,7 @@ func main() {
 	router.HandleFunc("DELETE /users/{id}", deleteUser)
 
 	// Start server (port, router):
-	err := http.ListenAndServe(":8080", jsonContentTypeMiddleware(router)) // sets header type for all routes
+	err = http.ListenAndServe(":8080", jsonContentTypeMiddleware(router)) // sets header type for all routes
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -56,9 +56,48 @@ func jsonContentTypeMiddleware(next http.Handler) http.Handler {
 }
 
 // Handlers:
-func indexPage(w http.ResponseWriter, r *http.Request)  {}
-func getUsers(w http.ResponseWriter, r *http.Request)   {}
-func getUser(w http.ResponseWriter, r *http.Request)    {}
+
+// Homepage:
+func indexPage(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "User Portal")
+}
+
+// Get all users:
+func getUsers(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		rows, err := db.Query("SELECT * FROM users")
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer rows.Close()
+
+		users := []User{}
+		for rows.Next() {
+			var u User
+			err = rows.Scan(&u.ID, &u.Name, &u.Email)
+			if err != nil {
+				log.Fatal(err)
+			}
+			users = append(users, u)
+		}
+		if err = rows.Err(); err != nil {
+		}
+		json.NewEncoder(w).Encode(users)
+	}
+}
+
+// Get user by {id}:
+func getUser(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		//do stuff
+	}
+}
+
+// Create new user:
 func createUser(w http.ResponseWriter, r *http.Request) {}
+
+// Update user:
 func updateUser(w http.ResponseWriter, r *http.Request) {}
+
+// Delete user:
 func deleteUser(w http.ResponseWriter, r *http.Request) {}
