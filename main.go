@@ -13,6 +13,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 )
 
 // Variables / Structs / Arrays:
@@ -67,7 +68,7 @@ func getUsers(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		rows, err := db.Query("SELECT * FROM users")
 		if err != nil {
-			log.Fatal(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		defer rows.Close()
 
@@ -76,7 +77,7 @@ func getUsers(db *sql.DB) http.HandlerFunc {
 			var u User
 			err = rows.Scan(&u.ID, &u.Name, &u.Email)
 			if err != nil {
-				log.Fatal(err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 			users = append(users, u)
 		}
@@ -89,7 +90,18 @@ func getUsers(db *sql.DB) http.HandlerFunc {
 // Get user by {id}:
 func getUser(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		//do stuff
+		vars := mux.Vars(r)
+		id, err := strconv.Atoi(vars["id"])
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		var u User
+		err := db.QueryRow("SELECT * FROM users WHERE id = $1", id).Scan(&u.ID, &u.Name, &u.Email)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		}
+		json.NewEncoder(w).Encode(u)
 	}
 }
 
