@@ -9,7 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
-	"github.com/lib/pq"
+	//"github.com/lib/pq"
 	"log"
 	"net/http"
 	"os"
@@ -32,6 +32,12 @@ func main() {
 		log.Fatal(err)
 	}
 	defer db.Close()
+
+	// Create db tables if not exist:
+	_, err = db.Exec("CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, name TEXT, email TEXT)")
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// Create router and endpoints:
 	router := mux.NewRouter()
@@ -56,7 +62,7 @@ func jsonContentTypeMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-// Handlers:
+// Handler functions:
 
 // Homepage:
 func indexPage(w http.ResponseWriter, r *http.Request) {
@@ -97,7 +103,7 @@ func getUser(db *sql.DB) http.HandlerFunc {
 			return
 		}
 		var u User
-		err := db.QueryRow("SELECT * FROM users WHERE id = $1", id).Scan(&u.ID, &u.Name, &u.Email)
+		err = db.QueryRow("SELECT * FROM users WHERE id = $1", id).Scan(&u.ID, &u.Name, &u.Email)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 		}
