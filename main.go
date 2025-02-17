@@ -9,7 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
-	//"github.com/lib/pq"
+	_ "github.com/lib/pq"
 	"log"
 	"net/http"
 	"os"
@@ -49,7 +49,7 @@ func main() {
 	router.HandleFunc("DELETE /users/{id}", deleteUser(db))
 
 	// Start server (port, router):
-	err = http.ListenAndServe(":8080", jsonContentTypeMiddleware(router)) // sets header type for all routes
+	err = http.ListenAndServe(":8000", jsonContentTypeMiddleware(router)) // sets header type for all routes
 	if err != nil {
 		log.Fatal(err)
 	}
